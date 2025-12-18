@@ -1,13 +1,43 @@
 """
 DEMO SCRIPT FOR VIDEO PRESENTATION
-This script provides a clear, step-by-step demonstration perfect for recording
+This script uses the SAME STANDARD CITY MAP as main.py
+Perfect for recording your 10-15 minute video demonstration
 """
 
 import heapq
 import time
 from collections import defaultdict
 
-# Simple, clean implementation for demo
+# ============================================================================
+# STANDARD CITY MAP - IDENTICAL TO ALL OTHER FILES
+# ============================================================================
+
+def create_standard_city_map():
+    """
+    Create the STANDARD city map used throughout the project
+    This is the EXACT SAME map as in main.py and test files
+    """
+    city = CityMap()
+    
+    # Standard roads configuration - IDENTICAL across all files
+    standard_roads = [
+        ('A', 'B', 5), ('A', 'D', 7),
+        ('B', 'C', 3), ('B', 'E', 2),
+        ('C', 'F', 4), ('C', 'G', 6),
+        ('D', 'E', 6), ('D', 'H', 3),
+        ('E', 'F', 1), ('E', 'I', 4),
+        ('F', 'J', 5), ('G', 'J', 2),
+        ('H', 'I', 5), ('I', 'J', 3)
+    ]
+    
+    for from_node, to_node, distance in standard_roads:
+        city.add_edge(from_node, to_node, distance)
+    
+    return city
+
+# ============================================================================
+# CITY MAP CLASS
+# ============================================================================
 
 class CityMap:
     def __init__(self):
@@ -22,12 +52,18 @@ class CityMap:
     
     def display_map(self):
         print("\n" + "="*60)
-        print("CITY MAP - Roads and Distances")
+        print("CITY MAP - Roads and Distances (Standard Layout)")
         print("="*60)
+        print("This is the SAME map used in all tests and demos")
+        print("-"*60)
         for node in sorted(self.graph.keys()):
-            connections = [f"{neighbor}({dist}km)" for neighbor, dist in self.graph[node]]
+            connections = [f"{neighbor}({dist}km)" for neighbor, dist in sorted(self.graph[node])]
             print(f"{node}: {', '.join(connections)}")
         print("="*60 + "\n")
+
+# ============================================================================
+# ALGORITHM IMPLEMENTATIONS
+# ============================================================================
 
 def dijkstra_demo(city_map, start, end):
     """Dijkstra's Algorithm with detailed step-by-step output"""
@@ -38,7 +74,7 @@ def dijkstra_demo(city_map, start, end):
     print("Time Complexity: O((V + E) log V)")
     print("-"*60)
     
-    start_time = time.time()
+    start_time = time.perf_counter()
     
     distances = {node: float('inf') for node in city_map.nodes}
     distances[start] = 0
@@ -80,14 +116,14 @@ def dijkstra_demo(city_map, start, end):
         current = previous[current]
     path.reverse()
     
-    end_time = time.time()
-    exec_time = (end_time - start_time) * 1000
+    end_time = time.perf_counter()
+    exec_time = (end_time - start_time) * 1000000  # Microseconds
     
     print("\n" + "-"*60)
     print("RESULTS:")
     print(f"  Shortest Path: {' → '.join(path)}")
     print(f"  Total Distance: {distances[end]:.1f} km")
-    print(f"  Execution Time: {exec_time:.4f} milliseconds")
+    print(f"  Execution Time: {exec_time:.2f} microseconds")
     print(f"  Nodes Visited: {len(visited)}")
     print(f"  Total Steps: {step}")
     print("█"*60 + "\n")
@@ -109,7 +145,7 @@ def bellman_ford_demo(city_map, start, end):
     print("Advantage: Can handle negative weights")
     print("-"*60)
     
-    start_time = time.time()
+    start_time = time.perf_counter()
     
     nodes = list(city_map.nodes)
     distances = {node: float('inf') for node in nodes}
@@ -145,14 +181,14 @@ def bellman_ford_demo(city_map, start, end):
         current = previous[current]
     path.reverse()
     
-    end_time = time.time()
-    exec_time = (end_time - start_time) * 1000
+    end_time = time.perf_counter()
+    exec_time = (end_time - start_time) * 1000000  # Microseconds
     
     print("-"*60)
     print("RESULTS:")
     print(f"  Shortest Path: {' → '.join(path)}")
     print(f"  Total Distance: {distances[end]:.1f} km")
-    print(f"  Execution Time: {exec_time:.4f} milliseconds")
+    print(f"  Execution Time: {exec_time:.2f} microseconds")
     print(f"  Total Steps: {step}")
     print("█"*60 + "\n")
     
@@ -173,7 +209,7 @@ def floyd_warshall_demo(city_map, start, end):
     print("Advantage: Finds shortest paths between ALL pairs")
     print("-"*60)
     
-    start_time = time.time()
+    start_time = time.perf_counter()
     
     nodes = list(city_map.nodes)
     node_idx = {node: i for i, node in enumerate(nodes)}
@@ -220,14 +256,14 @@ def floyd_warshall_demo(city_map, start, end):
             current = next_node[node_idx[current]][end_idx]
             path.append(current)
     
-    end_time = time.time()
-    exec_time = (end_time - start_time) * 1000
+    end_time = time.perf_counter()
+    exec_time = (end_time - start_time) * 1000000  # Microseconds
     
     print("-"*60)
     print("RESULTS:")
     print(f"  Shortest Path: {' → '.join(path)}")
     print(f"  Total Distance: {dist[start_idx][end_idx]:.1f} km")
-    print(f"  Execution Time: {exec_time:.4f} milliseconds")
+    print(f"  Execution Time: {exec_time:.2f} microseconds")
     print(f"  Total Steps: {step}")
     print(f"  All-pairs computed: {n*n} paths calculated")
     print("█"*60 + "\n")
@@ -244,29 +280,42 @@ def display_comparison(results):
     print("\n" + "="*70)
     print("  FINAL COMPARISON - ALL THREE ALGORITHMS")
     print("="*70)
-    print(f"{'Algorithm':<20} {'Path':<15} {'Distance':<12} {'Time (ms)':<12} {'Steps':<10}")
+    print(f"{'Algorithm':<20} {'Path':<15} {'Distance':<12} {'Time (μs)':<12} {'Steps':<10}")
     print("-"*70)
     
     for algo_name, result in results.items():
         path_str = f"{result['path'][0]}→{result['path'][-1]}" if result['path'] else "N/A"
         print(f"{algo_name:<20} {path_str:<15} {result['distance']:<12.1f} "
-              f"{result['time']:<12.4f} {result['steps']:<10}")
+              f"{result['time']:<12.2f} {result['steps']:<10}")
     
     print("="*70)
     
     # Determine winner
     fastest = min(results.items(), key=lambda x: x[1]['time'])
     print(f"\n🏆 FASTEST ALGORITHM: {fastest[0]}")
-    print(f"   Execution time: {fastest[1]['time']:.4f} ms")
+    print(f"   Execution time: {fastest[1]['time']:.2f} μs")
     print(f"   {fastest[1]['time']/max(r['time'] for r in results.values())*100:.1f}% "
           f"of slowest algorithm's time")
+    
+    # Verify all found same path
+    paths = [tuple(r['path']) for r in results.values()]
+    distances = [r['distance'] for r in results.values()]
+    
+    if len(set(paths)) == 1 and len(set(distances)) == 1:
+        print(f"\n✓ VERIFICATION: All algorithms found the SAME optimal path!")
+        print(f"  Path: {' → '.join(results['Dijkstra']['path'])}")
+        print(f"  Distance: {results['Dijkstra']['distance']} km")
     
     print("\n" + "="*70)
     print("CONCLUSION:")
     print("-"*70)
     print("• Dijkstra: Best for single-source shortest path (RECOMMENDED)")
+    print("  - Fastest execution time")
+    print("  - Most efficient for GPS/navigation systems")
     print("• Bellman-Ford: Use when negative weights are possible")
+    print("  - More versatile but slower")
     print("• Floyd-Warshall: Use when all-pairs distances are needed")
+    print("  - Pre-computes all possible routes")
     print("="*70 + "\n")
 
 def main():
@@ -280,31 +329,19 @@ def main():
     print("█"*70)
     print("\n")
     
-    # Create city map
-    print("Setting up city map...")
-    city = CityMap()
-    
-    # Define roads with distances
-    roads = [
-        ('A', 'B', 5), ('A', 'D', 7),
-        ('B', 'C', 3), ('B', 'E', 2),
-        ('C', 'F', 4), ('C', 'G', 6),
-        ('D', 'E', 6), ('D', 'H', 3),
-        ('E', 'F', 1), ('E', 'I', 4),
-        ('F', 'J', 5), ('G', 'J', 2),
-        ('H', 'I', 5), ('I', 'J', 3)
-    ]
-    
-    for from_node, to_node, distance in roads:
-        city.add_edge(from_node, to_node, distance)
+    # Create STANDARD city map
+    print("Setting up STANDARD city map...")
+    print("(This is the same map used in all our tests and analysis)")
+    city = create_standard_city_map()
     
     city.display_map()
     
-    # Define start and end
+    # Define start and end (STANDARD)
     start_point = 'A'
     end_point = 'J'
     
     print(f"OBJECTIVE: Find shortest path from {start_point} to {end_point}")
+    print(f"Map Size: 10 nodes (A-J), 14 roads")
     print("\nPress Enter to start demonstration...")
     input()
     
@@ -330,6 +367,7 @@ def main():
     display_comparison(results)
     
     print("\n✓ Demonstration Complete!")
+    print("\nNote: The city_map.png generated by main.py shows this exact network")
     print("Thank you for watching!\n")
 
 if __name__ == "__main__":

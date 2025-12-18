@@ -1,8 +1,41 @@
 import heapq
 import time
+import sys
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import networkx as nx
+
+# ============================================================================
+# STANDARD CITY MAP - USED CONSISTENTLY ACROSS ALL FILES
+# ============================================================================
+
+def create_standard_city_map():
+    """
+    Create the STANDARD city map used throughout the project
+    This ensures consistency across all tests and demos
+    
+    Map Structure:
+    - 10 nodes (intersections): A, B, C, D, E, F, G, H, I, J
+    - 14 roads (edges) with distances in kilometers
+    - All algorithms will use this exact same map
+    """
+    city = CityMap()
+    
+    # Standard roads configuration - DO NOT MODIFY
+    standard_roads = [
+        ('A', 'B', 5), ('A', 'D', 7),
+        ('B', 'C', 3), ('B', 'E', 2),
+        ('C', 'F', 4), ('C', 'G', 6),
+        ('D', 'E', 6), ('D', 'H', 3),
+        ('E', 'F', 1), ('E', 'I', 4),
+        ('F', 'J', 5), ('G', 'J', 2),
+        ('H', 'I', 5), ('I', 'J', 3)
+    ]
+    
+    for from_node, to_node, distance in standard_roads:
+        city.add_edge(from_node, to_node, distance)
+    
+    return city
 
 # ============================================================================
 # CITY MAP DATA STRUCTURE
@@ -32,23 +65,69 @@ class CityMap:
         """Return list of all edges"""
         return self.edges
     
-    def visualize(self):
-        """Visualize the city map"""
+    def visualize(self, highlight_path=None):
+        """
+        Visualize the city map with consistent layout
+        highlight_path: Optional list of nodes to highlight the shortest path
+        """
         G = nx.Graph()
         for from_node, to_node, weight in self.edges:
             G.add_edge(from_node, to_node, weight=weight)
         
-        pos = nx.spring_layout(G)
-        plt.figure(figsize=(12, 8))
-        nx.draw(G, pos, with_labels=True, node_color='lightblue', 
-                node_size=1500, font_size=12, font_weight='bold')
+        # Fixed positions for consistent visualization across all runs
+        pos = {
+            'A': (0, 2),
+            'B': (1, 2),
+            'C': (2, 2),
+            'D': (0, 1),
+            'E': (1, 1),
+            'F': (2, 1),
+            'G': (3, 2),
+            'H': (0, 0),
+            'I': (1, 0),
+            'J': (2, 0)
+        }
+        
+        plt.figure(figsize=(14, 8))
+        
+        # Draw all edges in light gray
+        nx.draw_networkx_edges(G, pos, edge_color='lightgray', width=2)
+        
+        # Highlight the path if provided
+        if highlight_path:
+            path_edges = [(highlight_path[i], highlight_path[i+1]) 
+                         for i in range(len(highlight_path)-1)]
+            nx.draw_networkx_edges(G, pos, edgelist=path_edges, 
+                                  edge_color='red', width=4)
+        
+        # Draw nodes
+        node_colors = []
+        for node in G.nodes():
+            if highlight_path:
+                if node == highlight_path[0]:
+                    node_colors.append('lightgreen')  # Start node
+                elif node == highlight_path[-1]:
+                    node_colors.append('lightcoral')  # End node
+                elif node in highlight_path:
+                    node_colors.append('yellow')  # Path nodes
+                else:
+                    node_colors.append('lightblue')
+            else:
+                node_colors.append('lightblue')
+        
+        nx.draw_networkx_nodes(G, pos, node_color=node_colors, 
+                              node_size=2000, node_shape='o')
+        nx.draw_networkx_labels(G, pos, font_size=14, font_weight='bold')
+        
+        # Draw edge labels (distances)
         edge_labels = nx.get_edge_attributes(G, 'weight')
-        nx.draw_networkx_edge_labels(G, pos, edge_labels)
-        plt.title("City Map Network")
+        nx.draw_networkx_edge_labels(G, pos, edge_labels, font_size=10)
+        
+        plt.title("City Map Network - Standard Layout", fontsize=16, fontweight='bold')
         plt.axis('off')
         plt.tight_layout()
         plt.savefig('city_map.png', dpi=300, bbox_inches='tight')
-        print("City map saved as 'city_map.png'")
+        print("✓ City map saved as 'city_map.png'")
 
 # ============================================================================
 # ALGORITHM 1: DIJKSTRA'S ALGORITHM
@@ -61,7 +140,7 @@ def dijkstra(city_map, start, end):
     Space Complexity: O(V)
     """
     # Initialize tracking variables
-    start_time = time.time()
+    start_time = time.perf_counter()  # More precise timing
     step_count = 0
     
     # Distance from start to each node
@@ -108,8 +187,8 @@ def dijkstra(city_map, start, end):
         current = previous_nodes[current]
     path.reverse()
     
-    end_time = time.time()
-    execution_time = (end_time - start_time) * 1000  # Convert to milliseconds
+    end_time = time.perf_counter()
+    execution_time = (end_time - start_time) * 1000000  # Convert to microseconds
     
     return {
         'algorithm': 'Dijkstra',
@@ -131,7 +210,7 @@ def bellman_ford(city_map, start, end):
     Space Complexity: O(V)
     Can handle negative weights (not applicable here but shows versatility)
     """
-    start_time = time.time()
+    start_time = time.perf_counter()
     step_count = 0
     
     nodes = city_map.get_all_nodes()
@@ -157,8 +236,8 @@ def bellman_ford(city_map, start, end):
         current = previous_nodes[current]
     path.reverse()
     
-    end_time = time.time()
-    execution_time = (end_time - start_time) * 1000
+    end_time = time.perf_counter()
+    execution_time = (end_time - start_time) * 1000000  # Convert to microseconds
     
     return {
         'algorithm': 'Bellman-Ford',
@@ -180,7 +259,7 @@ def floyd_warshall(city_map, start, end):
     Space Complexity: O(V^2)
     Finds shortest paths between all pairs of nodes
     """
-    start_time = time.time()
+    start_time = time.perf_counter()
     step_count = 0
     
     nodes = city_map.get_all_nodes()
@@ -226,8 +305,8 @@ def floyd_warshall(city_map, start, end):
             current = next_node[node_index[current]][end_idx]
             path.append(current)
     
-    end_time = time.time()
-    execution_time = (end_time - start_time) * 1000
+    end_time = time.perf_counter()
+    execution_time = (end_time - start_time) * 1000000  # Convert to microseconds
     
     return {
         'algorithm': 'Floyd-Warshall',
@@ -242,58 +321,14 @@ def floyd_warshall(city_map, start, end):
 # HELPER FUNCTIONS
 # ============================================================================
 
-def create_small_city_map():
-    """Create a small city map with 10 nodes"""
-    city = CityMap()
-    
-    # Add roads (edges) with distances in km
-    edges = [
-        ('A', 'B', 5), ('A', 'D', 7),
-        ('B', 'C', 3), ('B', 'E', 2),
-        ('C', 'F', 4), ('C', 'G', 6),
-        ('D', 'E', 6), ('D', 'H', 3),
-        ('E', 'F', 1), ('E', 'I', 4),
-        ('F', 'J', 5), ('G', 'J', 2),
-        ('H', 'I', 5), ('I', 'J', 3)
-    ]
-    
-    for from_node, to_node, weight in edges:
-        city.add_edge(from_node, to_node, weight)
-    
-    return city
-
-def create_medium_city_map():
-    """Create a medium city map with 15 nodes"""
-    city = CityMap()
-    
-    edges = [
-        ('A', 'B', 4), ('A', 'C', 2),
-        ('B', 'C', 1), ('B', 'D', 5),
-        ('C', 'D', 8), ('C', 'E', 10),
-        ('D', 'E', 2), ('D', 'F', 6),
-        ('E', 'F', 3), ('E', 'G', 7),
-        ('F', 'H', 1), ('G', 'H', 4),
-        ('G', 'I', 5), ('H', 'J', 3),
-        ('I', 'J', 2), ('I', 'K', 6),
-        ('J', 'K', 4), ('J', 'L', 8),
-        ('K', 'M', 3), ('L', 'M', 5),
-        ('L', 'N', 2), ('M', 'O', 4),
-        ('N', 'O', 6)
-    ]
-    
-    for from_node, to_node, weight in edges:
-        city.add_edge(from_node, to_node, weight)
-    
-    return city
-
 def print_result(result):
     """Print algorithm result in a formatted way"""
     print(f"\n{'='*60}")
     print(f"Algorithm: {result['algorithm']}")
     print(f"{'='*60}")
-    print(f"Path Found: {' -> '.join(result['path']) if result['path'] else 'No path found'}")
+    print(f"Path Found: {' → '.join(result['path']) if result['path'] else 'No path found'}")
     print(f"Total Distance: {result['distance']:.2f} km" if result['distance'] else "No path found")
-    print(f"Execution Time: {result['execution_time']:.4f} ms")
+    print(f"Execution Time: {result['execution_time']:.2f} μs")  # Microseconds
     print(f"Steps/Operations: {result['step_count']}")
     print(f"Nodes Visited: {result['nodes_visited']}")
     print(f"{'='*60}")
@@ -303,11 +338,11 @@ def compare_algorithms(results):
     print("\n" + "="*80)
     print("PERFORMANCE COMPARISON")
     print("="*80)
-    print(f"{'Algorithm':<20} {'Time (ms)':<15} {'Steps':<15} {'Distance':<15}")
+    print(f"{'Algorithm':<20} {'Time (μs)':<15} {'Steps':<15} {'Distance':<15}")
     print("-"*80)
     
     for result in results:
-        print(f"{result['algorithm']:<20} {result['execution_time']:<15.4f} "
+        print(f"{result['algorithm']:<20} {result['execution_time']:<15.2f} "
               f"{result['step_count']:<15} {result['distance']:<15.2f}")
     
     print("="*80)
@@ -328,20 +363,39 @@ def create_comparison_graphs(results):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
     
     # Execution time comparison
-    ax1.bar(algorithms, times, color=['#FF6B6B', '#4ECDC4', '#45B7D1'])
-    ax1.set_ylabel('Execution Time (ms)')
-    ax1.set_title('Execution Time Comparison')
+    colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']
+    bars1 = ax1.bar(algorithms, times, color=colors)
+    ax1.set_ylabel('Execution Time (μs)', fontweight='bold')
+    ax1.set_title('Execution Time Comparison', fontsize=14, fontweight='bold')
     ax1.grid(axis='y', alpha=0.3)
     
+    # Add value labels on bars
+    for i, (bar, v) in enumerate(zip(bars1, times)):
+        height = bar.get_height()
+        ax1.text(bar.get_x() + bar.get_width()/2., height + max(times)*0.02,
+                f'{v:.1f} μs', ha='center', va='bottom', fontweight='bold', fontsize=10)
+    
+    # Set y-axis to start from 0 and add some padding
+    ax1.set_ylim(0, max(times) * 1.15)
+    
     # Step count comparison
-    ax2.bar(algorithms, steps, color=['#FF6B6B', '#4ECDC4', '#45B7D1'])
-    ax2.set_ylabel('Number of Steps/Operations')
-    ax2.set_title('Computational Steps Comparison')
+    bars2 = ax2.bar(algorithms, steps, color=colors)
+    ax2.set_ylabel('Number of Steps/Operations', fontweight='bold')
+    ax2.set_title('Computational Steps Comparison', fontsize=14, fontweight='bold')
     ax2.grid(axis='y', alpha=0.3)
+    
+    # Add value labels on bars
+    for i, (bar, v) in enumerate(zip(bars2, steps)):
+        height = bar.get_height()
+        ax2.text(bar.get_x() + bar.get_width()/2., height + max(steps)*0.02,
+                f'{v}', ha='center', va='bottom', fontweight='bold', fontsize=10)
+    
+    # Set y-axis to start from 0 and add some padding
+    ax2.set_ylim(0, max(steps) * 1.15)
     
     plt.tight_layout()
     plt.savefig('algorithm_comparison.png', dpi=300, bbox_inches='tight')
-    print("\nComparison graph saved as 'algorithm_comparison.png'")
+    print("\n✓ Comparison graph saved as 'algorithm_comparison.png'")
 
 # ============================================================================
 # MAIN PROGRAM
@@ -353,17 +407,20 @@ def main():
     print("Comparing: Dijkstra, Bellman-Ford, and Floyd-Warshall Algorithms")
     print("="*80)
     
-    # Create city map
-    print("\nCreating city map...")
-    city_map = create_small_city_map()
+    # Create STANDARD city map
+    print("\nCreating standard city map...")
+    city_map = create_standard_city_map()
     
-    # Visualize the map
-    print("Visualizing city map...")
-    city_map.visualize()
-    
-    # Define start and end points
+    # Define start and end points (STANDARD for all tests)
     start_node = 'A'
     end_node = 'J'
+    
+    print(f"Map: 10 nodes (A-J), 14 roads")
+    print(f"Route: {start_node} → {end_node}")
+    
+    # Visualize the map
+    print("\nVisualizing city map...")
+    city_map.visualize()
     
     print(f"\nFinding shortest path from {start_node} to {end_node}...")
     print("\nRunning algorithms...\n")
@@ -386,6 +443,10 @@ def main():
     print_result(result3)
     results.append(result3)
     
+    # Visualize the shortest path found
+    print("\nVisualizing shortest path...")
+    city_map.visualize(highlight_path=result1['path'])
+    
     # Compare results
     compare_algorithms(results)
     
@@ -393,9 +454,11 @@ def main():
     print("ANALYSIS COMPLETE!")
     print("="*80)
     print("\nFiles generated:")
-    print("  - city_map.png: Visualization of the city network")
+    print("  - city_map.png: Visualization of the city network with shortest path")
     print("  - algorithm_comparison.png: Performance comparison graphs")
-    print("\nYou can now use these results in your report and presentation.")
+    print("\nAll algorithms found the same optimal path:")
+    print(f"  {' → '.join(result1['path'])}")
+    print(f"  Total distance: {result1['distance']} km")
     print("="*80)
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 """
 Test script to compare algorithm performance on different sized city maps
 This generates data for your report's performance analysis section
+Uses the SAME STANDARD MAP for consistency
 """
 
 import heapq
@@ -10,7 +11,34 @@ import matplotlib.pyplot as plt
 import random
 
 # ============================================================================
-# COPY THE THREE ALGORITHMS HERE (from main code)
+# STANDARD CITY MAP - SAME AS MAIN FILE
+# ============================================================================
+
+def create_standard_city_map():
+    """
+    Create the STANDARD city map used throughout the project
+    This is the SAME map used in main.py
+    """
+    city = CityMap()
+    
+    # Standard roads configuration - IDENTICAL to main.py
+    standard_roads = [
+        ('A', 'B', 5), ('A', 'D', 7),
+        ('B', 'C', 3), ('B', 'E', 2),
+        ('C', 'F', 4), ('C', 'G', 6),
+        ('D', 'E', 6), ('D', 'H', 3),
+        ('E', 'F', 1), ('E', 'I', 4),
+        ('F', 'J', 5), ('G', 'J', 2),
+        ('H', 'I', 5), ('I', 'J', 3)
+    ]
+    
+    for from_node, to_node, distance in standard_roads:
+        city.add_edge(from_node, to_node, distance)
+    
+    return city
+
+# ============================================================================
+# CITY MAP CLASS
 # ============================================================================
 
 class CityMap:
@@ -29,8 +57,12 @@ class CityMap:
     def get_all_nodes(self):
         return list(self.nodes)
 
+# ============================================================================
+# ALGORITHMS - SAME AS MAIN FILE
+# ============================================================================
+
 def dijkstra(city_map, start, end):
-    start_time = time.time()
+    start_time = time.perf_counter()
     step_count = 0
     
     distances = {node: float('inf') for node in city_map.get_all_nodes()}
@@ -65,8 +97,8 @@ def dijkstra(city_map, start, end):
         current = previous_nodes[current]
     path.reverse()
     
-    end_time = time.time()
-    execution_time = (end_time - start_time) * 1000
+    end_time = time.perf_counter()
+    execution_time = (end_time - start_time) * 1000000  # Microseconds
     
     return {
         'algorithm': 'Dijkstra',
@@ -77,7 +109,7 @@ def dijkstra(city_map, start, end):
     }
 
 def bellman_ford(city_map, start, end):
-    start_time = time.time()
+    start_time = time.perf_counter()
     step_count = 0
     
     nodes = city_map.get_all_nodes()
@@ -101,8 +133,8 @@ def bellman_ford(city_map, start, end):
         current = previous_nodes[current]
     path.reverse()
     
-    end_time = time.time()
-    execution_time = (end_time - start_time) * 1000
+    end_time = time.perf_counter()
+    execution_time = (end_time - start_time) * 1000000  # Microseconds
     
     return {
         'algorithm': 'Bellman-Ford',
@@ -113,7 +145,7 @@ def bellman_ford(city_map, start, end):
     }
 
 def floyd_warshall(city_map, start, end):
-    start_time = time.time()
+    start_time = time.perf_counter()
     step_count = 0
     
     nodes = city_map.get_all_nodes()
@@ -154,8 +186,8 @@ def floyd_warshall(city_map, start, end):
             current = next_node[node_index[current]][end_idx]
             path.append(current)
     
-    end_time = time.time()
-    execution_time = (end_time - start_time) * 1000
+    end_time = time.perf_counter()
+    execution_time = (end_time - start_time) * 1000000  # Microseconds
     
     return {
         'algorithm': 'Floyd-Warshall',
@@ -166,12 +198,12 @@ def floyd_warshall(city_map, start, end):
     }
 
 # ============================================================================
-# MAP GENERATION FUNCTIONS
+# ADDITIONAL MAP GENERATION FOR SCALABILITY TESTING
 # ============================================================================
 
 def generate_random_map(num_nodes, edge_density=0.3):
     """
-    Generate a random city map
+    Generate a random city map for scalability testing only
     edge_density: probability of edge between two nodes (0-1)
     """
     city = CityMap()
@@ -194,13 +226,59 @@ def generate_random_map(num_nodes, edge_density=0.3):
     return city
 
 # ============================================================================
-# TESTING FUNCTION
+# TESTING FUNCTIONS
 # ============================================================================
 
-def test_scalability():
-    """Test algorithm performance on different map sizes"""
+def test_standard_map():
+    """Test all algorithms on the STANDARD city map"""
     
-    # Test with different sizes
+    print("="*80)
+    print("TESTING ON STANDARD CITY MAP (10 nodes)")
+    print("="*80)
+    
+    # Use the STANDARD map
+    city_map = create_standard_city_map()
+    start_node = 'A'
+    end_node = 'J'
+    
+    print(f"\nRoute: {start_node} → {end_node}")
+    print(f"Map: 10 nodes (A-J), 14 roads\n")
+    
+    results = {}
+    
+    # Test Dijkstra
+    print("Testing Dijkstra's Algorithm...")
+    result = dijkstra(city_map, start_node, end_node)
+    results['Dijkstra'] = result
+    print(f"  Path: {' → '.join(result['path'])}")
+    print(f"  Distance: {result['distance']} km")
+    print(f"  Time: {result['execution_time']:.2f} μs")
+    print(f"  Steps: {result['step_count']}\n")
+    
+    # Test Bellman-Ford
+    print("Testing Bellman-Ford Algorithm...")
+    result = bellman_ford(city_map, start_node, end_node)
+    results['Bellman-Ford'] = result
+    print(f"  Path: {' → '.join(result['path'])}")
+    print(f"  Distance: {result['distance']} km")
+    print(f"  Time: {result['execution_time']:.2f} μs")
+    print(f"  Steps: {result['step_count']}\n")
+    
+    # Test Floyd-Warshall
+    print("Testing Floyd-Warshall Algorithm...")
+    result = floyd_warshall(city_map, start_node, end_node)
+    results['Floyd-Warshall'] = result
+    print(f"  Path: {' → '.join(result['path'])}")
+    print(f"  Distance: {result['distance']} km")
+    print(f"  Time: {result['execution_time']:.2f} μs")
+    print(f"  Steps: {result['step_count']}\n")
+    
+    return results
+
+def test_scalability():
+    """Test algorithm performance on different map sizes for analysis"""
+    
+    # Test with different sizes (including standard 10 nodes)
     test_sizes = [10, 15, 20, 25, 30, 40, 50]
     
     results = {
@@ -209,32 +287,39 @@ def test_scalability():
         'Floyd-Warshall': {'sizes': [], 'times': [], 'steps': []}
     }
     
-    print("="*80)
+    print("\n" + "="*80)
     print("SCALABILITY TEST - Testing algorithms on different map sizes")
     print("="*80)
+    print("\nNote: 10 nodes uses STANDARD map, others use random maps\n")
     
     for size in test_sizes:
-        print(f"\nTesting with {size} nodes...")
+        print(f"Testing with {size} nodes...")
         
-        # Generate map
-        city_map = generate_random_map(size, edge_density=0.3)
-        nodes = city_map.get_all_nodes()
-        start = nodes[0]
-        end = nodes[-1]
+        # Use standard map for 10 nodes, random for others
+        if size == 10:
+            city_map = create_standard_city_map()
+            nodes = city_map.get_all_nodes()
+            start = 'A'
+            end = 'J'
+        else:
+            city_map = generate_random_map(size, edge_density=0.3)
+            nodes = city_map.get_all_nodes()
+            start = nodes[0]
+            end = nodes[-1]
         
         # Test Dijkstra
         result = dijkstra(city_map, start, end)
         results['Dijkstra']['sizes'].append(size)
         results['Dijkstra']['times'].append(result['execution_time'])
         results['Dijkstra']['steps'].append(result['step_count'])
-        print(f"  Dijkstra: {result['execution_time']:.4f} ms")
+        print(f"  Dijkstra: {result['execution_time']:.2f} μs")
         
         # Test Bellman-Ford
         result = bellman_ford(city_map, start, end)
         results['Bellman-Ford']['sizes'].append(size)
         results['Bellman-Ford']['times'].append(result['execution_time'])
         results['Bellman-Ford']['steps'].append(result['step_count'])
-        print(f"  Bellman-Ford: {result['execution_time']:.4f} ms")
+        print(f"  Bellman-Ford: {result['execution_time']:.2f} μs")
         
         # Test Floyd-Warshall (skip for very large graphs)
         if size <= 50:
@@ -242,7 +327,7 @@ def test_scalability():
             results['Floyd-Warshall']['sizes'].append(size)
             results['Floyd-Warshall']['times'].append(result['execution_time'])
             results['Floyd-Warshall']['steps'].append(result['step_count'])
-            print(f"  Floyd-Warshall: {result['execution_time']:.4f} ms")
+            print(f"  Floyd-Warshall: {result['execution_time']:.2f} μs")
     
     # Create visualization
     plot_scalability_results(results)
@@ -251,7 +336,7 @@ def test_scalability():
     print("\n" + "="*80)
     print("SUMMARY TABLE FOR REPORT")
     print("="*80)
-    print(f"{'Nodes':<10} {'Dijkstra (ms)':<20} {'Bellman-Ford (ms)':<20} {'Floyd-Warshall (ms)':<20}")
+    print(f"{'Nodes':<10} {'Dijkstra (μs)':<20} {'Bellman-Ford (μs)':<20} {'Floyd-Warshall (μs)':<20}")
     print("-"*80)
     
     for i, size in enumerate(test_sizes):
@@ -260,9 +345,9 @@ def test_scalability():
         fw_time = results['Floyd-Warshall']['times'][i] if i < len(results['Floyd-Warshall']['times']) else 'N/A'
         
         if fw_time != 'N/A':
-            print(f"{size:<10} {dij_time:<20.4f} {bf_time:<20.4f} {fw_time:<20.4f}")
+            print(f"{size:<10} {dij_time:<20.2f} {bf_time:<20.2f} {fw_time:<20.2f}")
         else:
-            print(f"{size:<10} {dij_time:<20.4f} {bf_time:<20.4f} {fw_time:<20}")
+            print(f"{size:<10} {dij_time:<20.2f} {bf_time:<20.2f} {fw_time:<20}")
     
     print("="*80)
 
@@ -280,7 +365,7 @@ def plot_scalability_results(results):
              '^-', label='Floyd-Warshall', linewidth=2, markersize=8, color='#45B7D1')
     
     ax1.set_xlabel('Number of Nodes', fontsize=12, fontweight='bold')
-    ax1.set_ylabel('Execution Time (ms)', fontsize=12, fontweight='bold')
+    ax1.set_ylabel('Execution Time (μs)', fontsize=12, fontweight='bold')
     ax1.set_title('Execution Time vs Graph Size', fontsize=14, fontweight='bold')
     ax1.legend(fontsize=10)
     ax1.grid(True, alpha=0.3)
@@ -301,11 +386,23 @@ def plot_scalability_results(results):
     
     plt.tight_layout()
     plt.savefig('scalability_analysis.png', dpi=300, bbox_inches='tight')
-    print("\nScalability graph saved as 'scalability_analysis.png'")
+    print("\n✓ Scalability graph saved as 'scalability_analysis.png'")
 
 # ============================================================================
 # MAIN
 # ============================================================================
 
 if __name__ == "__main__":
+    # First test on standard map
+    standard_results = test_standard_map()
+    
+    # Then test scalability
     test_scalability()
+    
+    print("\n" + "="*80)
+    print("TESTING COMPLETE!")
+    print("="*80)
+    print("\nFor your report, use:")
+    print("  - Standard map results (10 nodes) as your main example")
+    print("  - Scalability results to show performance trends")
+    print("="*80)
