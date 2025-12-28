@@ -45,7 +45,7 @@ class CityMap:
     """Represents a city map as a weighted graph"""
     
     def __init__(self):
-        self.graph = defaultdict(list)  # Adjacency list
+        self.graph = defaultdict(list)
         self.nodes = set()
         self.edges = []
         
@@ -74,7 +74,6 @@ class CityMap:
         for from_node, to_node, weight in self.edges:
             G.add_edge(from_node, to_node, weight=weight)
         
-        # Fixed positions for consistent visualization across all runs
         pos = {
             'A': (0, 2),
             'B': (1, 2),
@@ -90,26 +89,23 @@ class CityMap:
         
         plt.figure(figsize=(14, 8))
         
-        # Draw all edges in light gray
         nx.draw_networkx_edges(G, pos, edge_color='lightgray', width=2)
         
-        # Highlight the path if provided
         if highlight_path:
             path_edges = [(highlight_path[i], highlight_path[i+1]) 
                          for i in range(len(highlight_path)-1)]
             nx.draw_networkx_edges(G, pos, edgelist=path_edges, 
                                   edge_color='red', width=4)
         
-        # Draw nodes
         node_colors = []
         for node in G.nodes():
             if highlight_path:
                 if node == highlight_path[0]:
-                    node_colors.append('lightgreen')  # Start node
+                    node_colors.append('lightgreen')
                 elif node == highlight_path[-1]:
-                    node_colors.append('lightcoral')  # End node
+                    node_colors.append('lightcoral')
                 elif node in highlight_path:
-                    node_colors.append('yellow')  # Path nodes
+                    node_colors.append('yellow')
                 else:
                     node_colors.append('lightblue')
             else:
@@ -119,7 +115,6 @@ class CityMap:
                               node_size=2000, node_shape='o')
         nx.draw_networkx_labels(G, pos, font_size=14, font_weight='bold')
         
-        # Draw edge labels (distances)
         edge_labels = nx.get_edge_attributes(G, 'weight')
         nx.draw_networkx_edge_labels(G, pos, edge_labels, font_size=10)
         
@@ -139,18 +134,14 @@ def dijkstra(city_map, start, end):
     Time Complexity: O((V + E) log V)
     Space Complexity: O(V)
     """
-    # Initialize tracking variables
-    start_time = time.perf_counter()  # More precise timing
+    start_time = time.perf_counter() 
     step_count = 0
     
-    # Distance from start to each node
     distances = {node: float('inf') for node in city_map.get_all_nodes()}
     distances[start] = 0
     
-    # Track the path
     previous_nodes = {node: None for node in city_map.get_all_nodes()}
     
-    # Priority queue: (distance, node)
     pq = [(0, start)]
     visited = set()
     
@@ -158,28 +149,23 @@ def dijkstra(city_map, start, end):
         step_count += 1
         current_distance, current_node = heapq.heappop(pq)
         
-        # Skip if already visited
         if current_node in visited:
             continue
         
         visited.add(current_node)
         
-        # If we reached the destination
         if current_node == end:
             break
         
-        # Check all neighbors
         for neighbor, weight in city_map.graph[current_node]:
             step_count += 1
             distance = current_distance + weight
             
-            # If we found a shorter path
             if distance < distances[neighbor]:
                 distances[neighbor] = distance
                 previous_nodes[neighbor] = current_node
                 heapq.heappush(pq, (distance, neighbor))
     
-    # Reconstruct path
     path = []
     current = end
     while current is not None:
@@ -188,7 +174,7 @@ def dijkstra(city_map, start, end):
     path.reverse()
     
     end_time = time.perf_counter()
-    execution_time = (end_time - start_time) * 1000000  # Convert to microseconds
+    execution_time = (end_time - start_time) * 1000000
     
     return {
         'algorithm': 'Dijkstra',
@@ -218,7 +204,6 @@ def bellman_ford(city_map, start, end):
     distances[start] = 0
     previous_nodes = {node: None for node in nodes}
     
-    # Relax edges V-1 times
     for _ in range(len(nodes) - 1):
         step_count += 1
         for from_node in city_map.graph:
@@ -228,7 +213,6 @@ def bellman_ford(city_map, start, end):
                     distances[to_node] = distances[from_node] + weight
                     previous_nodes[to_node] = from_node
     
-    # Reconstruct path
     path = []
     current = end
     while current is not None:
@@ -237,7 +221,7 @@ def bellman_ford(city_map, start, end):
     path.reverse()
     
     end_time = time.perf_counter()
-    execution_time = (end_time - start_time) * 1000000  # Convert to microseconds
+    execution_time = (end_time - start_time) * 1000000 
     
     return {
         'algorithm': 'Bellman-Ford',
@@ -266,15 +250,12 @@ def floyd_warshall(city_map, start, end):
     node_index = {node: i for i, node in enumerate(nodes)}
     n = len(nodes)
     
-    # Initialize distance matrix
     dist = [[float('inf')] * n for _ in range(n)]
     next_node = [[None] * n for _ in range(n)]
     
-    # Distance from node to itself is 0
     for i in range(n):
         dist[i][i] = 0
     
-    # Add edges to distance matrix
     for from_node in city_map.graph:
         for to_node, weight in city_map.graph[from_node]:
             i = node_index[from_node]
@@ -282,7 +263,6 @@ def floyd_warshall(city_map, start, end):
             dist[i][j] = weight
             next_node[i][j] = to_node
     
-    # Floyd-Warshall main algorithm
     for k in range(n):
         step_count += 1
         for i in range(n):
@@ -293,7 +273,6 @@ def floyd_warshall(city_map, start, end):
                     dist[i][j] = dist[i][k] + dist[k][j]
                     next_node[i][j] = next_node[i][k]
     
-    # Reconstruct path from start to end
     start_idx = node_index[start]
     end_idx = node_index[end]
     
@@ -306,7 +285,7 @@ def floyd_warshall(city_map, start, end):
             path.append(current)
     
     end_time = time.perf_counter()
-    execution_time = (end_time - start_time) * 1000000  # Convert to microseconds
+    execution_time = (end_time - start_time) * 1000000 
     
     return {
         'algorithm': 'Floyd-Warshall',
@@ -347,11 +326,9 @@ def compare_algorithms(results):
     
     print("="*80)
     
-    # Determine winner
     fastest = min(results, key=lambda x: x['execution_time'])
     print(f"\n🏆 WINNER: {fastest['algorithm']} (Fastest execution time)")
     
-    # Create comparison graphs
     create_comparison_graphs(results)
 
 def create_comparison_graphs(results):
@@ -362,35 +339,29 @@ def create_comparison_graphs(results):
     
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
     
-    # Execution time comparison
     colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']
     bars1 = ax1.bar(algorithms, times, color=colors)
     ax1.set_ylabel('Execution Time (μs)', fontweight='bold')
     ax1.set_title('Execution Time Comparison', fontsize=14, fontweight='bold')
     ax1.grid(axis='y', alpha=0.3)
     
-    # Add value labels on bars
     for i, (bar, v) in enumerate(zip(bars1, times)):
         height = bar.get_height()
         ax1.text(bar.get_x() + bar.get_width()/2., height + max(times)*0.02,
                 f'{v:.1f} μs', ha='center', va='bottom', fontweight='bold', fontsize=10)
     
-    # Set y-axis to start from 0 and add some padding
     ax1.set_ylim(0, max(times) * 1.15)
     
-    # Step count comparison
     bars2 = ax2.bar(algorithms, steps, color=colors)
     ax2.set_ylabel('Number of Steps/Operations', fontweight='bold')
     ax2.set_title('Computational Steps Comparison', fontsize=14, fontweight='bold')
     ax2.grid(axis='y', alpha=0.3)
     
-    # Add value labels on bars
     for i, (bar, v) in enumerate(zip(bars2, steps)):
         height = bar.get_height()
         ax2.text(bar.get_x() + bar.get_width()/2., height + max(steps)*0.02,
                 f'{v}', ha='center', va='bottom', fontweight='bold', fontsize=10)
     
-    # Set y-axis to start from 0 and add some padding
     ax2.set_ylim(0, max(steps) * 1.15)
     
     plt.tight_layout()
@@ -407,25 +378,21 @@ def main():
     print("Comparing: Dijkstra, Bellman-Ford, and Floyd-Warshall Algorithms")
     print("="*80)
     
-    # Create STANDARD city map
     print("\nCreating standard city map...")
     city_map = create_standard_city_map()
     
-    # Define start and end points (STANDARD for all tests)
     start_node = 'A'
     end_node = 'J'
     
     print(f"Map: 10 nodes (A-J), 14 roads")
     print(f"Route: {start_node} → {end_node}")
     
-    # Visualize the map
     print("\nVisualizing city map...")
     city_map.visualize()
     
     print(f"\nFinding shortest path from {start_node} to {end_node}...")
     print("\nRunning algorithms...\n")
     
-    # Run all three algorithms
     results = []
     
     print("[1/3] Running Dijkstra's Algorithm...")
@@ -443,11 +410,9 @@ def main():
     print_result(result3)
     results.append(result3)
     
-    # Visualize the shortest path found
     print("\nVisualizing shortest path...")
     city_map.visualize(highlight_path=result1['path'])
     
-    # Compare results
     compare_algorithms(results)
     
     print("\n" + "="*80)
@@ -562,6 +527,5 @@ def print_complexity_analysis():
 if __name__ == "__main__":
     main()
     
-    # Print complexity analysis for report
     print("\n\nGenerating detailed complexity analysis...\n")
     print_complexity_analysis()
