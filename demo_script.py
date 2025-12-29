@@ -2,6 +2,7 @@
 DEMO SCRIPT FOR VIDEO PRESENTATION
 This script uses the SAME STANDARD CITY MAP as main.py
 Perfect for recording your 10-15 minute video demonstration
+FIXED: Now produces identical results to main.py
 """
 
 import heapq
@@ -50,6 +51,10 @@ class CityMap:
         self.nodes.add(from_node)
         self.nodes.add(to_node)
     
+    def get_all_nodes(self):
+        """Return list of all nodes - ADDED for consistency with main.py"""
+        return list(self.nodes)
+    
     def display_map(self):
         print("\n" + "="*60)
         print("CITY MAP - Roads and Distances (Standard Layout)")
@@ -75,32 +80,34 @@ def dijkstra_demo(city_map, start, end):
     print("-"*60)
     
     start_time = time.perf_counter()
+    step_count = 0  # FIXED: Changed from 'step' to match main.py counting
     
-    distances = {node: float('inf') for node in city_map.nodes}
+    # FIXED: Use get_all_nodes() like main.py
+    distances = {node: float('inf') for node in city_map.get_all_nodes()}
     distances[start] = 0
-    previous = {node: None for node in city_map.nodes}
+    previous = {node: None for node in city_map.get_all_nodes()}
     pq = [(0, start)]
     visited = set()
-    step = 0
     
     print(f"\nStarting from: {start}")
     print(f"Destination: {end}\n")
     
     while pq:
+        step_count += 1  # FIXED: Count every pop operation
         current_dist, current = heapq.heappop(pq)
         
         if current in visited:
             continue
             
         visited.add(current)
-        step += 1
-        print(f"Step {step}: Visiting node {current} (distance from start: {current_dist}km)")
+        print(f"Step {len(visited)}: Visiting node {current} (distance from start: {current_dist}km)")
         
         if current == end:
             print(f"\n✓ Reached destination {end}!")
             break
         
         for neighbor, weight in city_map.graph[current]:
+            step_count += 1  # FIXED: Count edge relaxations like main.py
             distance = current_dist + weight
             if distance < distances[neighbor]:
                 distances[neighbor] = distance
@@ -125,14 +132,14 @@ def dijkstra_demo(city_map, start, end):
     print(f"  Total Distance: {distances[end]:.1f} km")
     print(f"  Execution Time: {exec_time:.2f} microseconds")
     print(f"  Nodes Visited: {len(visited)}")
-    print(f"  Total Steps: {step}")
+    print(f"  Total Steps: {step_count}")  # FIXED: Now matches main.py
     print("█"*60 + "\n")
     
     return {
         'path': path,
         'distance': distances[end],
         'time': exec_time,
-        'steps': step
+        'steps': step_count  # FIXED
     }
 
 def bellman_ford_demo(city_map, start, end):
@@ -147,22 +154,24 @@ def bellman_ford_demo(city_map, start, end):
     
     start_time = time.perf_counter()
     
-    nodes = list(city_map.nodes)
+    # FIXED: Use get_all_nodes() like main.py
+    nodes = city_map.get_all_nodes()
     distances = {node: float('inf') for node in nodes}
     distances[start] = 0
     previous = {node: None for node in nodes}
-    step = 0
+    step_count = 0  # FIXED: Changed from 'step' to 'step_count'
     
     print(f"\nStarting from: {start}")
     print(f"Destination: {end}")
     print(f"Relaxing edges {len(nodes)-1} times...\n")
     
     for i in range(len(nodes) - 1):
+        step_count += 1  # FIXED: Count outer loop iterations
         updated = False
         print(f"Iteration {i+1}:")
         for node in city_map.graph:
             for neighbor, weight in city_map.graph[node]:
-                step += 1
+                step_count += 1  # FIXED: Count each edge relaxation
                 if distances[node] + weight < distances[neighbor]:
                     distances[neighbor] = distances[node] + weight
                     previous[neighbor] = node
@@ -189,14 +198,14 @@ def bellman_ford_demo(city_map, start, end):
     print(f"  Shortest Path: {' → '.join(path)}")
     print(f"  Total Distance: {distances[end]:.1f} km")
     print(f"  Execution Time: {exec_time:.2f} microseconds")
-    print(f"  Total Steps: {step}")
+    print(f"  Total Steps: {step_count}")  # FIXED: Now matches main.py
     print("█"*60 + "\n")
     
     return {
         'path': path,
         'distance': distances[end],
         'time': exec_time,
-        'steps': step
+        'steps': step_count  # FIXED
     }
 
 def floyd_warshall_demo(city_map, start, end):
@@ -211,7 +220,8 @@ def floyd_warshall_demo(city_map, start, end):
     
     start_time = time.perf_counter()
     
-    nodes = list(city_map.nodes)
+    # FIXED: Use get_all_nodes() like main.py
+    nodes = city_map.get_all_nodes()
     node_idx = {node: i for i, node in enumerate(nodes)}
     n = len(nodes)
     
@@ -231,25 +241,27 @@ def floyd_warshall_demo(city_map, start, end):
     print(f"\nComputing shortest paths for all {n}×{n} = {n*n} pairs...")
     print("Processing intermediate nodes...\n")
     
-    step = 0
+    step_count = 0  # FIXED: Changed from 'step' to 'step_count'
     for k in range(n):
+        step_count += 1  # FIXED: Count outer loop
         print(f"Using {nodes[k]} as intermediate node...")
         updates = 0
         for i in range(n):
+            step_count += 1  # FIXED: Count middle loop
             for j in range(n):
-                step += 1
+                step_count += 1  # FIXED: Count inner loop (matches main.py)
                 if dist[i][k] + dist[k][j] < dist[i][j]:
                     dist[i][j] = dist[i][k] + dist[k][j]
                     next_node[i][j] = next_node[i][k]
                     updates += 1
         print(f"  {updates} paths updated\n")
     
-    # Reconstruct path
+    # Reconstruct path (FIXED: matches main.py logic)
     start_idx = node_idx[start]
     end_idx = node_idx[end]
     
     path = []
-    if next_node[start_idx][end_idx]:
+    if next_node[start_idx][end_idx] is not None:  # FIXED: Added None check
         path = [start]
         current = start
         while current != end:
@@ -264,7 +276,7 @@ def floyd_warshall_demo(city_map, start, end):
     print(f"  Shortest Path: {' → '.join(path)}")
     print(f"  Total Distance: {dist[start_idx][end_idx]:.1f} km")
     print(f"  Execution Time: {exec_time:.2f} microseconds")
-    print(f"  Total Steps: {step}")
+    print(f"  Total Steps: {step_count}")  # FIXED: Now matches main.py
     print(f"  All-pairs computed: {n*n} paths calculated")
     print("█"*60 + "\n")
     
@@ -272,7 +284,7 @@ def floyd_warshall_demo(city_map, start, end):
         'path': path,
         'distance': dist[start_idx][end_idx],
         'time': exec_time,
-        'steps': step
+        'steps': step_count  # FIXED
     }
 
 def display_comparison(results):

@@ -41,16 +41,13 @@ def create_standard_city_map():
 # CITY MAP DATA STRUCTURE
 # ============================================================================
 
-class CityMap:
-    """Represents a city map as a weighted graph"""
-    
+class CityMap:    
     def __init__(self):
         self.graph = defaultdict(list)
         self.nodes = set()
         self.edges = []
         
     def add_edge(self, from_node, to_node, weight):
-        """Add a bidirectional edge (road) between two nodes (intersections)"""
         self.graph[from_node].append((to_node, weight))
         self.graph[to_node].append((from_node, weight))
         self.nodes.add(from_node)
